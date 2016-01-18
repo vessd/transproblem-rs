@@ -5,7 +5,8 @@ description = "Application for solving transportation problem."
 repository = "https://github.com/D101101/transproblem-rs"
 authors = ["Veselkov Sergey <veselkovsd@yandex.ru>"]
 readme = "README.md"
-keywords = ["transportation","problem"]
+license = "MIT OR Apache-2.0"
+keywords = ["transportation", "problem"]
 
 [lib]
 name = "transproblem"
