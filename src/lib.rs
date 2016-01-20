@@ -136,8 +136,8 @@ impl std::fmt::Display for Error {
 impl std::error::Error for Error {
     fn description(&self) -> &str {
         match self {
-            &NumOfRows => "number of suppliers isn't equal to the number of rows in the cost matrix",
-            &NumOfCols => "number of consumers isn't equal to the number of columns in the cost matrix",
+            &NumOfRows => "invalid number of rows in the matrix of costs",
+            &NumOfCols => "invalid number of columns in the matrix of costs",
         }
     }
 }

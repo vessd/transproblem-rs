@@ -3,6 +3,7 @@ extern crate transproblem;
 
 use getopts::Options;
 use transproblem::Transportation;
+use transproblem::Error;
 use std::env;
 use std::fs::File;
 use std::io::{self, BufRead, BufReader, Write};
@@ -177,7 +178,18 @@ fn main() {
                     t.potential_method();
                     t.printstd();
                 }
-                Err(err) => println!("{:?}:{}", file, err.to_string()),
+                Err(err) => {
+                    match err {
+                        Error::NumOfRows => {
+                            println!("{:?}: количество поставщиков не равно количеству строк в матрице стоимостей",
+                                     file)
+                        }
+                        Error::NumOfCols => {
+                            println!("{:?}: количество потребителей не равно количеству столбцов в матрице стоимостей",
+                                     file)
+                        }
+                    }
+                }
             };
         }
     }
