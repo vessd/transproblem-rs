@@ -122,6 +122,7 @@ impl<'a> Iterator for MatrixIter<'a> {
 
 #[derive(Debug)]
 pub enum Error {
+    NumOfSupOrCust,
     NumOfRows,
     NumOfCols,
 }

@@ -186,7 +186,10 @@ fn main() {
         for file in matches.free.iter().map(PathBuf::from) {
             let (a, b, c) = match file_input(&file) {
                 Ok((a, b, c)) => (a, b, c),
-                Err(err) => panic!(err.to_string()),
+                Err(err) => {
+                    println!("{:?}:{}", file, err.to_string());
+                    continue;
+                }
             };
             match Transportation::new(a, b, c) {
                 Ok(mut t) => {
