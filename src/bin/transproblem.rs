@@ -10,23 +10,31 @@ use std::io::{self, BufRead, BufReader, Write};
 use std::path::PathBuf;
 
 fn file_input(file: &PathBuf) -> Result<(Vec<u64>, Vec<u64>, Vec<Vec<u64>>), Box<std::error::Error>> {
-    let mut f = BufReader::new(try!(File::open(file)));
+    let f = BufReader::new(try!(File::open(file)));
+    let mut lines: Vec<String> = try!(f.lines().collect());
+    lines = lines.into_iter()
+                 .filter(|line| {
+                     line.trim();
+                     !line.is_empty()
+                 })
+                 .collect();
 
-    let mut a = String::new();
-    try!(f.read_line(&mut a));
-    let a: Vec<u64> = try!(a.split_whitespace()
-                            .map(|number| number.parse())
-                            .collect());
+    let a: Vec<u64> = try!(lines.iter()
+                                .nth(0)
+                                .unwrap_or(&"".to_owned())
+                                .split_whitespace()
+                                .map(|number| number.parse())
+                                .collect());
 
-    let mut b = String::new();
-    try!(f.read_line(&mut b));
-    let b: Vec<u64> = try!(b.split_whitespace()
-                            .map(|number| number.parse())
-                            .collect());
+    let b: Vec<u64> = try!(lines.iter()
+                                .nth(1)
+                                .unwrap_or(&"".to_owned())
+                                .split_whitespace()
+                                .map(|number| number.parse())
+                                .collect());
 
-    let lines: Vec<String> = try!(f.lines().collect());
     let c: Vec<Vec<u64>> = try!(lines.iter()
-                                     .filter(|line| !line.is_empty())
+                                     .skip(2)
                                      .map(|line| {
                                          line.split_whitespace()
                                              .map(|number| number.parse())
@@ -51,8 +59,12 @@ fn console_input() -> Result<(Vec<u64>, Vec<u64>, Vec<Vec<u64>>), io::Error> {
         try!(io::stdin().read_line(&mut buffer));
         match buffer.trim().parse() {
             Ok(size) => {
-                a = vec![0;size];
-                break;
+                if size != 0 {
+                    a = vec![0;size];
+                    break;
+                } else {
+                    println!("Ошибка: количество поставщиков должно быть больше 0");
+                }
             }
             Err(_) => println!("Ошибка: количество поставщиков должно быть целым неотрицательным числом"),
         }
@@ -66,8 +78,12 @@ fn console_input() -> Result<(Vec<u64>, Vec<u64>, Vec<Vec<u64>>), io::Error> {
         try!(io::stdin().read_line(&mut buffer));
         match buffer.trim().parse() {
             Ok(size) => {
-                b = vec![0;size];
-                break;
+                if size != 0 {
+                    b = vec![0;size];
+                    break;
+                } else {
+                    println!("Ошибка: количество потребителей должно быть больше 0");
+                }
             }
             Err(_) => println!("Ошибка: количество потребителей должно быть целым неотрицательным числом"),
         }
@@ -180,14 +196,20 @@ fn main() {
                 }
                 Err(err) => {
                     match err {
+                        Error::NumOfSupOrCust => {
+                            println!("{:?}: количество поставщиков и потребителей не должно быть меньше 0",
+                                     file)
+                        }
                         Error::NumOfRows => {
                             println!("{:?}: количество поставщиков не равно количеству строк в матрице стоимостей",
                                      file)
                         }
+
                         Error::NumOfCols => {
                             println!("{:?}: количество потребителей не равно количеству столбцов в матрице стоимостей",
                                      file)
                         }
+
                     }
                 }
             };

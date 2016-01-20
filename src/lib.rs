@@ -136,6 +136,7 @@ impl std::fmt::Display for Error {
 impl std::error::Error for Error {
     fn description(&self) -> &str {
         match self {
+            &NumOfSupOrCust => "invalid number of suppliers or customers",
             &NumOfRows => "invalid number of rows in the matrix of costs",
             &NumOfCols => "invalid number of columns in the matrix of costs",
         }
@@ -415,6 +416,9 @@ impl Transportation {
     }
 
     pub fn new(mut a: Vec<u64>, mut b: Vec<u64>, mut c: Vec<Vec<u64>>) -> Result<Transportation, Error> {
+        if a.is_empty() || b.is_empty() {
+            return Err(NumOfSupOrCust);
+        }
         if a.len() != c.len() {
             return Err(NumOfRows);
         }
