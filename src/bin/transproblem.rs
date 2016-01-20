@@ -8,25 +8,7 @@ use std::fs::File;
 use std::io::{self, BufRead, BufReader, Write};
 use std::path::PathBuf;
 
-#[derive(Debug)]
-enum InputError {
-    Io(io::Error),
-    Parse(std::num::ParseIntError),
-}
-
-impl From<io::Error> for InputError {
-    fn from(err: io::Error) -> InputError {
-        InputError::Io(err)
-    }
-}
-
-impl From<std::num::ParseIntError> for InputError {
-    fn from(err: std::num::ParseIntError) -> InputError {
-        InputError::Parse(err)
-    }
-}
-
-fn file_input(file: &PathBuf) -> Result<(Vec<u64>, Vec<u64>, Vec<Vec<u64>>), InputError> {
+fn file_input(file: &PathBuf) -> Result<(Vec<u64>, Vec<u64>, Vec<Vec<u64>>), Box<std::error::Error>> {
     let mut f = BufReader::new(try!(File::open(file)));
 
     let mut a = String::new();
@@ -187,12 +169,7 @@ fn main() {
         for file in matches.free.iter().map(PathBuf::from) {
             let (a, b, c) = match file_input(&file) {
                 Ok((a, b, c)) => (a, b, c),
-                Err(e) => {
-                    match e {
-                        InputError::Io(err) => panic!(err.to_string()),
-                        InputError::Parse(err) => panic!(err.to_string()),
-                    }
-                }
+                Err(err) => panic!(err.to_string()),
             };
             match Transportation::new(a, b, c) {
                 Ok(mut t) => {
