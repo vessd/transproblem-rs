@@ -4,12 +4,13 @@ use prettytable::row::Row;
 use prettytable::cell::Cell;
 
 use std::ops::{Index, IndexMut};
-use Direction::{Down, Left, Right, Up};
+use self::Direction::{Down, Left, Right, Up};
+use self::Error::*;
 
 #[cfg(test)]
 mod test;
 
-#[derive(Clone,PartialEq,Debug)]
+#[derive(Clone,Copy,PartialEq,Debug)]
 enum Direction {
     Up,
     Down,
@@ -89,8 +90,8 @@ struct MatrixIter<'a> {
 }
 
 impl<'a> MatrixIter<'a> {
-    fn move_by(&mut self, d: &Direction) {
-        match *d {
+    fn move_by(&mut self, d: Direction) {
+        match d {
             Up => self.i += 1,
             Down => self.i -= 1,
             Left => self.j += 1,
@@ -111,11 +112,33 @@ impl<'a> Iterator for MatrixIter<'a> {
             self.f = true;
         }
         let buf = (self.i, self.j);
-        let d = self.state[self.i][self.j].clone();
+        let d = self.state[self.i][self.j];
         while self.state[self.i][self.j] == d || self.state[self.i][self.j] == Direction::None {
-            self.move_by(&d);
+            self.move_by(d);
         }
         Some(buf)
+    }
+}
+
+#[derive(Debug)]
+pub enum Error {
+    NumOfRows,
+    NumOfCols,
+}
+
+impl std::fmt::Display for Error {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        use std::error::Error;
+        f.write_str(self.description())
+    }
+}
+
+impl std::error::Error for Error {
+    fn description(&self) -> &str {
+        match self {
+            &NumOfRows => "number of suppliers isn't equal to the number of rows in the cost matrix",
+            &NumOfCols => "number of consumers isn't equal to the number of columns in the cost matrix",
+        }
     }
 }
 
@@ -391,14 +414,18 @@ impl Transportation {
         table.printstd();
     }
 
-    pub fn new(mut a: Vec<u64>, mut b: Vec<u64>, mut c: Vec<Vec<u64>>) -> Result<Transportation, &'static str> {
-        if (a.len() != c.len()) || (b.len() != c[0].len()) {
-            return Err("Количество поставщиков и потребителей не соотвествует размеру матрицы стоимости перевозок");
+    pub fn new(mut a: Vec<u64>, mut b: Vec<u64>, mut c: Vec<Vec<u64>>) -> Result<Transportation, Error> {
+        if a.len() != c.len() {
+            return Err(NumOfRows);
+        }
+        for i in &c {
+            if b.len() != i.len() {
+                return Err(NumOfCols);
+            }
         }
 
         let sum_s = a.iter().fold(0, std::ops::Add::add); //a.iter().sum();
         let sum_d = b.iter().fold(0, std::ops::Add::add); //b.iter().sum();
-
         if sum_s > sum_d {
             b.push(sum_s - sum_d);
             for i in &mut c {
@@ -409,7 +436,6 @@ impl Transportation {
             a.push(sum_d - sum_s);
             c.push(vec![0;b.len()]);
         }
-
         let mut cost = Matrix::new(c[0].len());
         for i in c {
             cost.push(i);

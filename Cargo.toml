@@ -1,6 +1,6 @@
 [package]
 name = "transproblem-rs"
-version = "0.1.0"
+version = "0.1.1"
 description = "Application for solving transportation problem."
 repository = "https://github.com/D101101/transproblem-rs"
 authors = ["Veselkov Sergey <veselkovsd@yandex.ru>"]
@@ -13,3 +13,4 @@ name = "transproblem"
 
 [dependencies]
 prettytable-rs = "0.5.2"
+getopts = "0.2.14"

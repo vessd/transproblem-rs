@@ -1,157 +1,207 @@
+extern crate getopts;
 extern crate transproblem;
+
+use getopts::Options;
 use transproblem::Transportation;
-
-use std::io::{self, BufRead, BufReader, Write};
+use std::env;
 use std::fs::File;
+use std::io::{self, BufRead, BufReader, Write};
+use std::path::PathBuf;
 
-fn file_input() -> (Vec<u64>, Vec<u64>, Vec<Vec<u64>>) {
-    print!("Введите имя файла: ");
-    io::stdout().flush().unwrap();
-    let mut file_name = String::new();
-    io::stdin()
-        .read_line(&mut file_name)
-        .expect("Не удалось считать имя файла");
-
-    let file_name = file_name.trim();
-    let mut f = BufReader::new(File::open(file_name).expect("Не удалось открыть файл"));
-
-    let mut a = String::new();
-    f.read_line(&mut a).expect("Не удалось считать строку в файле");
-    let a: Vec<u64> = a.split_whitespace()
-                       .map(|number| {
-                           number.parse()
-                                 .expect("Не удалось распознасть количество груза у поставщиков")
-                       })
-                       .collect();
-
-    let mut b = String::new();
-    f.read_line(&mut b).expect("Не удалось считать строку в файле");
-    let b: Vec<u64> = b.split_whitespace()
-                       .map(|number| {
-                           number.parse()
-                                 .expect("Не удалось распознасть количество заказоного груза у потребителей")
-                       })
-                       .collect();
-
-    let c: Vec<Vec<u64>> = f.lines()
-                            .map(|l| {
-                                l.expect("Не удалось распознасть стоимости перевозок")
-                                 .split_whitespace()
-                                 .map(|number| {
-                                     number.parse()
-                                           .expect("Не удалось распознасть стоимости перевозок")
-                                 })
-                                 .collect()
-                            })
-                            .collect();
-
-    (a, b, c)
+#[derive(Debug)]
+enum InputError {
+    Io(io::Error),
+    Parse(std::num::ParseIntError),
 }
 
-fn console_input() -> (Vec<u64>, Vec<u64>, Vec<Vec<u64>>) {
-    let mut a_size = String::new();
-    let mut b_size = String::new();
-    let mut a: Vec<u64> = Vec::new();
-    let mut b: Vec<u64> = Vec::new();
-    let mut c: Vec<Vec<u64>> = Vec::new();
+impl From<io::Error> for InputError {
+    fn from(err: io::Error) -> InputError {
+        InputError::Io(err)
+    }
+}
+
+impl From<std::num::ParseIntError> for InputError {
+    fn from(err: std::num::ParseIntError) -> InputError {
+        InputError::Parse(err)
+    }
+}
+
+fn file_input(file: &PathBuf) -> Result<(Vec<u64>, Vec<u64>, Vec<Vec<u64>>), InputError> {
+    let mut f = BufReader::new(try!(File::open(file)));
+
+    let mut a = String::new();
+    try!(f.read_line(&mut a));
+    let a: Vec<u64> = try!(a.split_whitespace()
+                            .map(|number| number.parse())
+                            .collect());
+
+    let mut b = String::new();
+    try!(f.read_line(&mut b));
+    let b: Vec<u64> = try!(b.split_whitespace()
+                            .map(|number| number.parse())
+                            .collect());
+
+    let lines: Vec<String> = try!(f.lines().collect());
+    let c: Vec<Vec<u64>> = try!(lines.iter()
+                                     .filter(|line| !line.is_empty())
+                                     .map(|line| {
+                                         line.split_whitespace()
+                                             .map(|number| number.parse())
+                                             .collect()
+                                     })
+                                     .collect());
+
+    Ok((a, b, c))
+}
+
+fn console_input() -> Result<(Vec<u64>, Vec<u64>, Vec<Vec<u64>>), io::Error> {
+    let mut a: Vec<u64>;
+    let mut b: Vec<u64>;
+    let mut c: Vec<Vec<u64>>;
+    let mut buffer = String::new();
 
     println!("Введите количество поставщиков");
-    print!("A = ");
-    io::stdout().flush().unwrap();
-    io::stdin()
-        .read_line(&mut a_size)
-        .expect("не удалось считать линию");
-    let a_size: usize = a_size.trim().parse().expect("Не удалось распознать количество поставщиков");
-
-    println!("Введите количество потребителей");
-    print!("B = ");
-    io::stdout().flush().unwrap();
-    io::stdin()
-        .read_line(&mut b_size)
-        .expect("не удалось считать линию");
-    let b_size: usize = b_size.trim().parse().expect("Не удалось распознать количество потребителей");
-
-    let mut buf = String::new();
-
-    println!("Введите количество грузка у каждого поставщика");
-    for i in 0..a_size {
-        print!("a[{}] = ", i + 1);
-        io::stdout().flush().unwrap();
-        buf.clear();
-        io::stdin()
-            .read_line(&mut buf)
-            .expect("не удалось считать линию");
-        a.push(buf.trim().parse().expect("Не удалось распознать количество груза"));
-    }
-
-    println!("Введите количество заказоного груза у каждого потребителя");
-    for i in 0..b_size {
-        print!("b[{}] = ", i + 1);
-        io::stdout().flush().unwrap();
-        buf.clear();
-        io::stdin()
-            .read_line(&mut buf)
-            .expect("не удалось считать линию");
-        b.push(buf.trim().parse().expect("Не удалось распознать количество заказоного груза"));
-    }
-
-    println!("Введите стоимости перевозок");
-    for i in 0..a_size {
-        c.push(Vec::new());
-        for j in 0..b_size {
-            print!("c[{}][{}] = ", i + 1, j + 1);
-            io::stdout().flush().unwrap();
-            buf.clear();
-            io::stdin()
-                .read_line(&mut buf)
-                .expect("не удалось считать линию");
-            c[i].push(buf.trim().parse().expect("Не удалось распознать стоимость перевозоки"));
+    loop {
+        print!("A = ");
+        try!(io::stdout().flush());
+        buffer.clear();
+        try!(io::stdin().read_line(&mut buffer));
+        match buffer.trim().parse() {
+            Ok(size) => {
+                a = vec![0;size];
+                break;
+            }
+            Err(_) => println!("Ошибка: количество поставщиков должно быть целым неотрицательным числом"),
         }
     }
 
-    (a, b, c)
+    println!("Введите количество потребителей");
+    loop {
+        print!("B = ");
+        try!(io::stdout().flush());
+        buffer.clear();
+        try!(io::stdin().read_line(&mut buffer));
+        match buffer.trim().parse() {
+            Ok(size) => {
+                b = vec![0;size];
+                break;
+            }
+            Err(_) => println!("Ошибка: количество потребителей должно быть целым неотрицательным числом"),
+        }
+    }
+
+    println!("Введите количество груза у каждого поставщика");
+    for i in 0..a.len() {
+        loop {
+            print!("a[{}] = ", i + 1);
+            try!(io::stdout().flush());
+            buffer.clear();
+            try!(io::stdin().read_line(&mut buffer));
+            match buffer.trim().parse() {
+                Ok(amount) => {
+                    a[i] = amount;
+                    break;
+                }
+                Err(_) => println!("Ошибка: количество груза должно быть целым неотрицательным числом"),
+            }
+        }
+    }
+
+    println!("Введите количество заказоного груза у каждого потребителя");
+    for i in 0..b.len() {
+        loop {
+            print!("b[{}] = ", i + 1);
+            try!(io::stdout().flush());
+            buffer.clear();
+            try!(io::stdin().read_line(&mut buffer));
+            match buffer.trim().parse() {
+                Ok(amount) => {
+                    b[i] = amount;
+                    break;
+                }
+                Err(_) => println!("Ошибка: количество груза должно быть целым неотрицательным числом"),
+            }
+        }
+    }
+
+    println!("Введите стоимости перевозок");
+    c = vec![vec![0;b.len()];a.len()];
+    for i in 0..a.len() {
+        for j in 0..b.len() {
+            loop {
+                print!("c[{}][{}] = ", i + 1, j + 1);
+                try!(io::stdout().flush());
+                buffer.clear();
+                try!(io::stdin().read_line(&mut buffer));
+                match buffer.trim().parse() {
+                    Ok(cost) => {
+                        c[i][j] = cost;
+                        break;
+                    }
+                    Err(_) => println!("Ошибка: стоимость должна быть целым неотрицательным числом"),
+                }
+            }
+        }
+    }
+
+    Ok((a, b, c))
+}
+
+fn print_usage(opts: &Options, reason: &str) {
+    let reason = format!("{}\nusage: {} [options] <file>...",
+                         reason,
+                         env::args_os().next().unwrap().to_string_lossy());
+    println!("{}", opts.usage(&reason));
 }
 
 fn main() {
-    let f;
-    loop {
-        println!("1) Ввод с клавиатуры");
-        println!("2) Ввод из файла");
-        let mut buf = String::new();
-        io::stdin()
-            .read_line(&mut buf)
-            .expect("не удалось считать линию");
-        match buf.trim().parse::<u8>() {
-            Ok(num) => {
-                if num == 1 || num == 2 {
-                    if num == 1 {
-                        f = true;
-                    } else {
-                        f = false;
-                    }
-                    break;
-                } else {
-                    println!("Ошибка, попробуйте снова");
-                    continue;
-                }
-            }
-            Err(_) => {
-                println!("Ошибка, попробуйте снова");
-                continue;
-            }
-        };
+    let mut opts = Options::new();
+    opts.optflag("h", "help", "print this help menu");
+
+    let matches = match opts.parse(env::args().skip(1)) {
+        Ok(m) => m,
+        Err(f) => {
+            print_usage(&opts, &f.to_string());
+            std::process::exit(1);
+        }
+    };
+
+    if matches.opt_present("h") {
+        print_usage(&opts, "");
+        std::process::exit(0);
     }
 
-    let (a, b, c) = if f {
-        console_input()
+    if matches.free.is_empty() {
+        let (a, b, c) = match console_input() {
+            Ok((a, b, c)) => (a, b, c),
+            Err(err) => panic!(err.to_string()),
+        };
+        match Transportation::new(a, b, c) {
+            Ok(mut t) => {
+                t.potential_method();
+                t.printstd();
+            }
+            Err(err) => panic!(err.to_string()),
+        };
     } else {
-        file_input()
-    };
-
-    let mut t = match Transportation::new(a, b, c) {
-        Ok(v) => v,
-        Err(e) => panic!(e),
-    };
-    t.potential_method();
-    t.printstd();
+        for file in matches.free.iter().map(PathBuf::from) {
+            let (a, b, c) = match file_input(&file) {
+                Ok((a, b, c)) => (a, b, c),
+                Err(e) => {
+                    match e {
+                        InputError::Io(err) => panic!(err.to_string()),
+                        InputError::Parse(err) => panic!(err.to_string()),
+                    }
+                }
+            };
+            match Transportation::new(a, b, c) {
+                Ok(mut t) => {
+                    println!("{:?}", file);
+                    t.potential_method();
+                    t.printstd();
+                }
+                Err(err) => println!("{:?}:{}", file, err.to_string()),
+            };
+        }
+    }
 }
