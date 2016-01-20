@@ -4,14 +4,14 @@ extern crate transproblem;
 use getopts::Options;
 use transproblem::Transportation;
 use transproblem::Error;
-use std::env;
+use std::collections::VecDeque;
 use std::fs::File;
 use std::io::{self, BufRead, BufReader, Write};
 use std::path::PathBuf;
 
 fn file_input(file: &PathBuf) -> Result<(Vec<u64>, Vec<u64>, Vec<Vec<u64>>), Box<std::error::Error>> {
     let f = BufReader::new(try!(File::open(file)));
-    let mut lines: Vec<String> = try!(f.lines().collect());
+    let mut lines: VecDeque<String> = try!(f.lines().collect());
     lines = lines.into_iter()
                  .filter(|line| {
                      line.trim();
@@ -19,22 +19,19 @@ fn file_input(file: &PathBuf) -> Result<(Vec<u64>, Vec<u64>, Vec<Vec<u64>>), Box
                  })
                  .collect();
 
-    let a: Vec<u64> = try!(lines.iter()
-                                .nth(0)
-                                .unwrap_or(&"".to_owned())
+    let a: Vec<u64> = try!(lines.pop_front()
+                                .unwrap_or("".to_owned())
                                 .split_whitespace()
-                                .map(|number| number.parse())
+                                .map(str::parse)
                                 .collect());
 
-    let b: Vec<u64> = try!(lines.iter()
-                                .nth(1)
-                                .unwrap_or(&"".to_owned())
+    let b: Vec<u64> = try!(lines.pop_front()
+                                .unwrap_or("".to_owned())
                                 .split_whitespace()
-                                .map(|number| number.parse())
+                                .map(str::parse)
                                 .collect());
 
     let c: Vec<Vec<u64>> = try!(lines.iter()
-                                     .skip(2)
                                      .map(|line| {
                                          line.split_whitespace()
                                              .map(|number| number.parse())
@@ -149,7 +146,7 @@ fn console_input() -> Result<(Vec<u64>, Vec<u64>, Vec<Vec<u64>>), io::Error> {
 fn print_usage(opts: &Options, reason: &str) {
     let reason = format!("{}\nusage: {} [options] <file>...",
                          reason,
-                         env::args_os().next().unwrap().to_string_lossy());
+                         std::env::args_os().next().unwrap().to_string_lossy());
     println!("{}", opts.usage(&reason));
 }
 
@@ -157,7 +154,7 @@ fn main() {
     let mut opts = Options::new();
     opts.optflag("h", "help", "print this help menu");
 
-    let matches = match opts.parse(env::args().skip(1)) {
+    let matches = match opts.parse(std::env::args().skip(1)) {
         Ok(m) => m,
         Err(f) => {
             print_usage(&opts, &f.to_string());
