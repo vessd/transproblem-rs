@@ -50,12 +50,9 @@ impl<T> Matrix<T> {
         }
     }
 
-    fn push(&mut self, vector: Vec<T>) {
+    fn push(&mut self, mut vector: Vec<T>) {
         assert_eq!(self.cols, vector.len());
-        // self.data.push_all(vector);
-        for v in vector {
-            self.data.push(v);
-        }
+        self.data.append(&mut vector);
     }
 
     fn rows(&self) -> usize {
