@@ -12,5 +12,5 @@ keywords = ["transportation", "problem"]
 name = "transproblem"
 
 [dependencies]
-prettytable-rs = "0.5.2"
+prettytable-rs = "0.6.0"
 getopts = "0.2.14"
