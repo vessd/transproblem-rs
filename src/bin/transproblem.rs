@@ -9,6 +9,7 @@ use std::fs::File;
 use std::io::{self, BufRead, BufReader, Write};
 use std::path::PathBuf;
 
+// Try to read a file into a vector of strings. If successful, then try to parse them.
 fn file_input(file: &PathBuf) -> Result<(Vec<u64>, Vec<u64>, Vec<Vec<u64>>), Box<std::error::Error>> {
     let f = BufReader::new(try!(File::open(file)));
     let mut lines: VecDeque<String> = try!(f.lines().collect());
@@ -42,6 +43,7 @@ fn file_input(file: &PathBuf) -> Result<(Vec<u64>, Vec<u64>, Vec<Vec<u64>>), Box
     Ok((a, b, c))
 }
 
+// Try to read from stdin. If successful, then try to parse. Read it again if parse failed.
 fn console_input() -> Result<(Vec<u64>, Vec<u64>, Vec<Vec<u64>>), io::Error> {
     let mut a: Vec<u64>;
     let mut b: Vec<u64>;
@@ -204,15 +206,13 @@ fn main() {
                             println!("{:?}: количество поставщиков не равно количеству строк в матрице стоимостей",
                                      file)
                         }
-
                         Error::NumOfCols => {
                             println!("{:?}: количество потребителей не равно количеству столбцов в матрице стоимостей",
                                      file)
                         }
-
                     }
                 }
-            };
+            }
         }
     }
 }

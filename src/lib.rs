@@ -9,7 +9,7 @@ use self::Error::*;
 
 #[cfg(test)]
 mod test;
-
+// Possible directions for cycle
 #[derive(Clone,Copy,PartialEq,Debug)]
 enum Direction {
     Up,
@@ -18,7 +18,7 @@ enum Direction {
     Right,
     None,
 }
-
+// The structure for emulation a two-dimensional array
 struct Matrix<T> {
     cols: usize,
     data: Vec<T>,
@@ -49,16 +49,16 @@ impl<T> Matrix<T> {
             data: Vec::new(),
         }
     }
-
+    // Add a line to the matrix
     fn push(&mut self, mut vector: Vec<T>) {
         assert_eq!(self.cols, vector.len());
         self.data.append(&mut vector);
     }
-
+    // The number of rows in the matrix
     fn rows(&self) -> usize {
         self.data.len() / self.cols
     }
-
+    // The number of columns in the matrix
     fn cols(&self) -> usize {
         self.cols
     }
@@ -101,13 +101,13 @@ impl<'a> MatrixIter<'a> {
 impl<'a> Iterator for MatrixIter<'a> {
     type Item = (usize,usize);
     fn next(&mut self) -> Option<Self::Item> {
-        if self.i == self.start_i && self.j == self.start_j && self.f {
-            self.f = false;
-            return None;
-        }
         if self.i == self.start_i && self.j == self.start_j {
+            if self.f {
+                return None;
+            }
             self.f = true;
         }
+
         let buf = (self.i, self.j);
         let d = self.state[self.i][self.j];
         while self.state[self.i][self.j] == d || self.state[self.i][self.j] == Direction::None {
@@ -117,6 +117,7 @@ impl<'a> Iterator for MatrixIter<'a> {
     }
 }
 
+// Initialization errors
 #[derive(Debug)]
 pub enum Error {
     NumOfSupOrCust,
@@ -133,14 +134,15 @@ impl std::fmt::Display for Error {
 
 impl std::error::Error for Error {
     fn description(&self) -> &str {
-        match self {
-            &NumOfSupOrCust => "invalid number of suppliers or customers",
-            &NumOfRows => "invalid number of rows in the matrix of costs",
-            &NumOfCols => "invalid number of columns in the matrix of costs",
+        match *self {
+            NumOfSupOrCust => "invalid number of suppliers or customers",
+            NumOfRows => "invalid number of rows in the matrix of costs",
+            NumOfCols => "invalid number of columns in the matrix of costs",
         }
     }
 }
 
+// The main structure
 pub struct Transportation {
     supply: Vec<u64>,
     demand: Vec<u64>,
@@ -190,7 +192,8 @@ impl Transportation {
             }
         }
     }
-
+    // Detect cycle via dfs and build a matrix of directions
+    // If the direction of the trans_state[i][j] isn't None, the cycle is found
     fn cycle_detection(&self, i: usize, j: usize) -> Matrix<Direction> {
         let mut trans_state = Matrix::new(self.trans.cols());
         for _ in 0..self.trans.rows() {
@@ -256,7 +259,8 @@ impl Transportation {
 
         trans_state
     }
-
+    // If the number of basic cells in the transportation plan is less then
+    // m + n - 1, it must be replenished
     fn replenish(&mut self) {
         let number = self.trans.data.iter().filter(|&&a| a != None).count();
 
@@ -275,7 +279,7 @@ impl Transportation {
             }
         }
     }
-
+    // Recursive calculation of potentials
     fn calculation_of_potentials(&self) -> (Vec<i64>, Vec<i64>) {
         let mut u = vec![0;self.trans.rows()];
         let mut v = vec![0;self.trans.cols()];
@@ -307,7 +311,8 @@ impl Transportation {
 
         (u, v)
     }
-
+    // Check for optimality
+    // If the transportation plan is not optimal, then return the minimum of difference
     fn check(&self) -> Option<(usize, usize, i64)> {
         let mut min = None;
         let (u, v) = self.calculation_of_potentials();
@@ -328,7 +333,7 @@ impl Transportation {
         }
         min
     }
-
+    // Calculate the total cost
     fn total_cost(&self) -> u64 {
         let mut z = 0;
         for (t, c) in self.trans.data.iter().zip(self.cost.data.iter()) {
@@ -344,9 +349,7 @@ impl Transportation {
         self.replenish();
 
         loop {
-            let min_delta = self.check();
-
-            if let Some((i, j, _)) = min_delta {
+            if let Some((i, j, _)) = self.check() {
                 self.trans[i][j] = Some(0);
                 let trans_state = self.cycle_detection(i, j);
 
@@ -382,7 +385,7 @@ impl Transportation {
                 }
                 self.trans[max.0][max.1] = None;
             } else {
-                return; // план оптимален
+                return; // the plan is optimal
             }
         }
     }
