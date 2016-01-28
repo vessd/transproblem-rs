@@ -2,7 +2,7 @@
 Rust application for solving Linear Programming problem of finding optimal solution for transportation problem.
 
 The most of phrases written in Russian for several reasons:
- * this project is for my classmates
+ * this project for my classmates
  * at the moment there is no good tool to integrate translation for the Rust
  * I'm bad in english
 
