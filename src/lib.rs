@@ -260,7 +260,7 @@ impl Transportation {
         trans_state
     }
     // If the number of basic cells in the transportation plan is less then
-    // m + n - 1, it must be replenished
+    // m + n - 1, it needs to replenish
     fn replenish(&mut self) {
         let number = self.trans.data.iter().filter(|&&a| a != None).count();
 
