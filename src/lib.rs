@@ -348,45 +348,41 @@ impl Transportation {
         self.least_cost_method();
         self.replenish();
 
-        loop {
-            if let Some((i, j, _)) = self.check() {
-                self.trans[i][j] = Some(0);
-                let trans_state = self.cycle_detection(i, j);
+        while let Some((i, j, _)) = self.check() {
+            self.trans[i][j] = Some(0);
+            let trans_state = self.cycle_detection(i, j);
 
-                let mut min = std::u64::MAX;
-                let mut f = true;
-                for x in trans_state.iter(i, j) {
-                    if f {
-                        f = false;
-                    } else {
-                        if min > self.trans[x.0][x.1].unwrap() {
-                            min = self.trans[x.0][x.1].unwrap();
-                        }
-                        f = true;
+            let mut min = std::u64::MAX;
+            let mut f = true;
+            for x in trans_state.iter(i, j) {
+                if f {
+                    f = false;
+                } else {
+                    if min > self.trans[x.0][x.1].unwrap() {
+                        min = self.trans[x.0][x.1].unwrap();
                     }
+                    f = true;
                 }
-
-                f = true;
-                for x in trans_state.iter(i, j) {
-                    if f {
-                        self.trans[x.0][x.1] = Some(self.trans[x.0][x.1].unwrap() + min);
-                        f = false;
-                    } else {
-                        self.trans[x.0][x.1] = Some(self.trans[x.0][x.1].unwrap() - min);
-                        f = true;
-                    }
-                }
-
-                let mut max = (0, 0, 0);
-                for x in trans_state.iter(i, j) {
-                    if self.trans[x.0][x.1].unwrap() == 0 && max.2 <= self.cost[x.0][x.1] {
-                        max = (x.0, x.1, self.cost[x.0][x.1]);
-                    }
-                }
-                self.trans[max.0][max.1] = None;
-            } else {
-                return; // the plan is optimal
             }
+
+            f = true;
+            for x in trans_state.iter(i, j) {
+                if f {
+                    self.trans[x.0][x.1] = Some(self.trans[x.0][x.1].unwrap() + min);
+                    f = false;
+                } else {
+                    self.trans[x.0][x.1] = Some(self.trans[x.0][x.1].unwrap() - min);
+                    f = true;
+                }
+            }
+
+            let mut max = (0, 0, 0);
+            for x in trans_state.iter(i, j) {
+                if self.trans[x.0][x.1].unwrap() == 0 && max.2 <= self.cost[x.0][x.1] {
+                    max = (x.0, x.1, self.cost[x.0][x.1]);
+                }
+            }
+            self.trans[max.0][max.1] = None;
         }
     }
 
