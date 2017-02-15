@@ -10,7 +10,7 @@ Feel free to write me a mail or create a issue, if you need a translation.
 
 ## How to build and run
 ```
-git clone https://github.com/D101101/transproblem-rs.git
+git clone https://github.com/vessd/transproblem-rs.git
 cd transproblem-rs
 cargo run --release
 ```

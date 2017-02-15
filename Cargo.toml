@@ -1,16 +1,13 @@
 [package]
 name = "transproblem-rs"
-version = "0.1.1"
+version = "0.1.2"
 description = "Application for solving transportation problem."
-repository = "https://github.com/D101101/transproblem-rs"
-authors = ["Veselkov Sergey <veselkovsd@yandex.ru>"]
+repository = "https://github.com/vessd/transproblem-rs"
+authors = ["Sergey Veselkov <veselkovsd@yandex.ru>"]
 readme = "README.md"
 license = "MIT OR Apache-2.0"
 keywords = ["transportation", "problem"]
 
-[lib]
-name = "transproblem"
-
 [dependencies]
-prettytable-rs = "0.6.0"
+prettytable-rs = "0.6.6"
 getopts = "0.2.14"

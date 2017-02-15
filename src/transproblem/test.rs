@@ -1,5 +1,4 @@
-use super::Transportation;
-use super::Direction;
+use super::*;
 
 fn init() -> Transportation {
     let a = vec![300, 250, 200];
@@ -23,8 +22,7 @@ fn test_transportation_create() {
 #[test]
 fn test_least_cost_method() {
     let mut t = init();
-    let result = vec![Some(170), None, None, Some(130), None, None, Some(250), None, None,
-                      Some(150), None, Some(50), Some(50), None, None, None];
+    let result = vec![Some(170), None, None, Some(130), None, None, Some(250), None, None, Some(150), None, Some(50), Some(50), None, None, None];
     t.least_cost_method();
     assert_eq!(t.trans.data, result);
 }
@@ -75,7 +73,6 @@ fn test_total_cost() {
 fn test_potential_method() {
     let mut t = init();
     t.potential_method();
-    let result = vec![Some(220), None, Some(80), None, None, Some(80), Some(170), None, None,
-                      Some(70), None, Some(130), None, None, None, Some(50)];
+    let result = vec![Some(220), None, Some(80), None, None, Some(80), Some(170), None, None, Some(70), None, Some(130), None, None, None, Some(50)];
     assert_eq!(t.trans.data, result);
 }

@@ -1,44 +1,46 @@
+extern crate prettytable;
 extern crate getopts;
-extern crate transproblem;
+
+mod transproblem;
 
 use getopts::Options;
-use transproblem::Transportation;
-use transproblem::Error;
 use std::collections::VecDeque;
 use std::fs::File;
 use std::io::{self, BufRead, BufReader, Write};
 use std::path::PathBuf;
+use transproblem::Error;
+use transproblem::Transportation;
 
 // Try to read a file into a vector of strings. If successful, then try to parse them.
 fn file_input(file: &PathBuf) -> Result<(Vec<u64>, Vec<u64>, Vec<Vec<u64>>), Box<std::error::Error>> {
     let f = BufReader::new(try!(File::open(file)));
     let mut lines: VecDeque<String> = try!(f.lines().collect());
     lines = lines.into_iter()
-                 .filter(|line| {
-                     line.trim();
-                     !line.is_empty()
-                 })
-                 .collect();
+        .filter(|line| {
+            line.trim();
+            !line.is_empty()
+        })
+        .collect();
 
     let a: Vec<u64> = try!(lines.pop_front()
-                                .unwrap_or("".to_owned())
-                                .split_whitespace()
-                                .map(str::parse)
-                                .collect());
+        .unwrap_or("".to_owned())
+        .split_whitespace()
+        .map(str::parse)
+        .collect());
 
     let b: Vec<u64> = try!(lines.pop_front()
-                                .unwrap_or("".to_owned())
-                                .split_whitespace()
-                                .map(str::parse)
-                                .collect());
+        .unwrap_or("".to_owned())
+        .split_whitespace()
+        .map(str::parse)
+        .collect());
 
     let c: Vec<Vec<u64>> = try!(lines.iter()
-                                     .map(|line| {
-                                         line.split_whitespace()
-                                             .map(|number| number.parse())
-                                             .collect()
-                                     })
-                                     .collect());
+        .map(|line| {
+            line.split_whitespace()
+                .map(|number| number.parse())
+                .collect()
+        })
+        .collect());
 
     Ok((a, b, c))
 }

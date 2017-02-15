@@ -1,14 +1,15 @@
-extern crate prettytable;
-use prettytable::Table;
-use prettytable::row::Row;
-use prettytable::cell::Cell;
-
-use std::ops::{Index, IndexMut};
-use self::Direction::{Down, Left, Right, Up};
-use self::Error::*;
-
 #[cfg(test)]
 mod test;
+
+use self::Direction::{Down, Left, Right, Up};
+use self::Error::*;
+use prettytable::Table;
+use prettytable::cell::Cell;
+use prettytable::row::Row;
+
+use std;
+use std::ops::{Index, IndexMut};
+
 // Possible directions for cycle
 #[derive(Clone,Copy,PartialEq,Debug)]
 enum Direction {
@@ -99,7 +100,7 @@ impl<'a> MatrixIter<'a> {
 }
 
 impl<'a> Iterator for MatrixIter<'a> {
-    type Item = (usize,usize);
+    type Item = (usize, usize);
     fn next(&mut self) -> Option<Self::Item> {
         if self.i == self.start_i && self.j == self.start_j {
             if self.f {
@@ -425,8 +426,8 @@ impl Transportation {
             }
         }
 
-        let sum_s = a.iter().fold(0, std::ops::Add::add); //a.iter().sum();
-        let sum_d = b.iter().fold(0, std::ops::Add::add); //b.iter().sum();
+        let sum_s: u64 = a.iter().sum();
+        let sum_d: u64 = b.iter().sum();
         if sum_s > sum_d {
             b.push(sum_s - sum_d);
             for i in &mut c {
