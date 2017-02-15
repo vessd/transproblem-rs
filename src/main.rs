@@ -176,7 +176,7 @@ fn main() {
             Ok((a, b, c)) => (a, b, c),
             Err(err) => panic!(err.to_string()),
         };
-        match Transportation::new(a, b, c) {
+        match Transportation::new(&a, &b, &c) {
             Ok(mut t) => {
                 t.potential_method();
                 t.printstd();
@@ -192,7 +192,7 @@ fn main() {
                     continue;
                 }
             };
-            match Transportation::new(a, b, c) {
+            match Transportation::new(&a, &b, &c) {
                 Ok(mut t) => {
                     println!("{:?}", file);
                     t.potential_method();

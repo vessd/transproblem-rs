@@ -43,7 +43,7 @@ impl<T> IndexMut<usize> for Matrix<T> {
     }
 }
 
-impl<T> Matrix<T> {
+impl<T: Clone> Matrix<T> {
     fn new(columns: usize) -> Matrix<T> {
         Matrix {
             cols: columns,
@@ -63,7 +63,10 @@ impl<T> Matrix<T> {
     // Add a column to the matrix
     fn push_column(&mut self, vector: &[T]) {
         assert_eq!(self.rows(), vector.len());
-
+        for (i,v) in vector.iter().enumerate() {
+            self.data.insert(self.cols*i, v.clone());
+        }
+        self.cols += 1;
     }
     // The number of rows in the matrix
     fn rows(&self) -> usize {
@@ -438,37 +441,41 @@ impl Transportation {
         let total_demand: u64 = demand.iter().sum();
         let (supply, demand, cost) = if total_supply != total_demand {
             if total_supply > total_demand {
-                let s = supply.clone();
-                let mut d = demand.clone();
+                let s = supply.to_vec();
+                let mut d = demand.to_vec();
                 let mut c = Matrix::new(cost[0].len());
-
-                let c = cost.iter().map(|c| c.push(0)).collect();
                 d.push(total_supply - total_demand);
+                for r in cost {
+                    c.push_row(r);
+                }
+                c.push_column(&vec![0;supply.len()]);
                 (s, d, c)
             } else {
-                let mut s = supply.clone();
-                let d = demand.clone();
-                let mut c = c.clone();
+                let mut s = supply.to_vec();
+                let d = demand.to_vec();
+                let mut c = Matrix::new(cost[0].len());
                 s.push(total_demand - total_supply);
-                c.push(vec![0;b.len()]);
+                for r in cost {
+                    c.push_row(r);
+                }
+                c.push_row(&vec![0;demand.len()]);
                 (s, d, c)
             }
         } else {
-            ()
+            let mut c = Matrix::new(cost[0].len());
+            for r in cost {
+                    c.push_row(r);
+                }
+            (supply.to_vec(), demand.to_vec(), c)
         };
-
-        let mut cost = Matrix::new(c[0].len());
-        for i in c {
-            cost.push(i);
-        }
 
         Ok(Transportation {
             trans: Matrix {
                 cols: demand.len(),
                 data: vec![None; supply.len()*demand.len()],
             },
-            supply: a,
-            demand: b,
+            supply: supply,
+            demand: demand,
             cost: cost,
         })
     }

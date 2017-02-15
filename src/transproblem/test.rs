@@ -4,7 +4,7 @@ fn init() -> Transportation {
     let a = vec![300, 250, 200];
     let b = vec![220, 150, 250, 180];
     let c = vec![vec![4, 5, 3, 6], vec![7, 2, 1, 5], vec![6, 1, 4, 2]];
-    let t = match Transportation::new(a, b, c) {
+    let t = match Transportation::new(&a, &b, &c) {
         Ok(v) => v,
         Err(e) => panic!(e),
     };
@@ -22,7 +22,8 @@ fn test_transportation_create() {
 #[test]
 fn test_least_cost_method() {
     let mut t = init();
-    let result = vec![Some(170), None, None, Some(130), None, None, Some(250), None, None, Some(150), None, Some(50), Some(50), None, None, None];
+    let result = vec![Some(170), None, None, Some(130), None, None, Some(250), None, None,
+                      Some(150), None, Some(50), Some(50), None, None, None];
     t.least_cost_method();
     assert_eq!(t.trans.data, result);
 }
@@ -73,6 +74,8 @@ fn test_total_cost() {
 fn test_potential_method() {
     let mut t = init();
     t.potential_method();
-    let result = vec![Some(220), None, Some(80), None, None, Some(80), Some(170), None, None, Some(70), None, Some(130), None, None, None, Some(50)];
+    let result = vec![Some(220), None, Some(80), None, None, Some(80), Some(170), None, None,
+                      Some(70), None, Some(130), None, None, None, Some(50)];
     assert_eq!(t.trans.data, result);
 }
+
