@@ -55,6 +55,16 @@ impl<T> Matrix<T> {
         assert_eq!(self.cols, vector.len());
         self.data.append(&mut vector);
     }
+    // Add a row to the matrix
+    fn push_row(&mut self, vector: &[T]) {
+        assert_eq!(self.cols(), vector.len());
+        self.data.extend_from_slice(vector);
+    }
+    // Add a column to the matrix
+    fn push_column(&mut self, vector: &[T]) {
+        assert_eq!(self.rows(), vector.len());
+
+    }
     // The number of rows in the matrix
     fn rows(&self) -> usize {
         self.data.len() / self.cols
@@ -413,31 +423,40 @@ impl Transportation {
         table.printstd();
     }
 
-    pub fn new(mut a: Vec<u64>, mut b: Vec<u64>, mut c: Vec<Vec<u64>>) -> Result<Transportation, Error> {
-        if a.is_empty() || b.is_empty() {
+    pub fn new(supply: &[u64], demand: &[u64], cost: &[Vec<u64>]) -> Result<Transportation, Error> {
+        if supply.is_empty() || demand.is_empty() {
             return Err(NumOfSupOrCust);
         }
-        if a.len() != c.len() {
+        if supply.len() != cost.len() {
             return Err(NumOfRows);
         }
-        for i in &c {
-            if b.len() != i.len() {
-                return Err(NumOfCols);
-            }
+        if cost.iter().any(|c| c.len() != demand.len()) {
+            return Err(NumOfCols);
         }
 
-        let sum_s: u64 = a.iter().sum();
-        let sum_d: u64 = b.iter().sum();
-        if sum_s > sum_d {
-            b.push(sum_s - sum_d);
-            for i in &mut c {
-                i.push(0);
+        let total_supply: u64 = supply.iter().sum();
+        let total_demand: u64 = demand.iter().sum();
+        let (supply, demand, cost) = if total_supply != total_demand {
+            if total_supply > total_demand {
+                let s = supply.clone();
+                let mut d = demand.clone();
+                let mut c = Matrix::new(cost[0].len());
+
+                let c = cost.iter().map(|c| c.push(0)).collect();
+                d.push(total_supply - total_demand);
+                (s, d, c)
+            } else {
+                let mut s = supply.clone();
+                let d = demand.clone();
+                let mut c = c.clone();
+                s.push(total_demand - total_supply);
+                c.push(vec![0;b.len()]);
+                (s, d, c)
             }
-        }
-        if sum_s < sum_d {
-            a.push(sum_d - sum_s);
-            c.push(vec![0;b.len()]);
-        }
+        } else {
+            ()
+        };
+
         let mut cost = Matrix::new(c[0].len());
         for i in c {
             cost.push(i);
@@ -445,8 +464,8 @@ impl Transportation {
 
         Ok(Transportation {
             trans: Matrix {
-                cols: b.len(),
-                data: vec![None;a.len()*b.len()],
+                cols: demand.len(),
+                data: vec![None; supply.len()*demand.len()],
             },
             supply: a,
             demand: b,
